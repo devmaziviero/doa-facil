@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { buscarDoacaoPorCodigo, editarDoacao, excluirDoacao } from "../api";
 import type { Doacao, StatusDoacao } from "../types";
-import SeletorImagem from "../components/SeletorImagem";
+import SeletorImagens, { ImagemNova } from "../components/SeletorImagens";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -42,8 +42,8 @@ export default function GerenciarDoacao() {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [status, setStatus] = useState<StatusDoacao>("disponivel");
-  const [imagem, setImagem] = useState<File | null>(null);
-  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+  const [imagensExistentes, setImagensExistentes] = useState<string[]>([]);
+  const [imagensNovas, setImagensNovas] = useState<ImagemNova[]>([]);
 
   async function buscar(e: FormEvent) {
     e.preventDefault();
@@ -55,8 +55,8 @@ export default function GerenciarDoacao() {
       setTitulo(encontrada.titulo);
       setDescricao(encontrada.descricao ?? "");
       setStatus(encontrada.status);
-      setImagem(null);
-      setImagemPreview(encontrada.imagem_url);
+      setImagensExistentes(encontrada.imagens_urls);
+      setImagensNovas([]);
     } catch (e: any) {
       setDoacao(null);
       setCodigo(null);
@@ -64,9 +64,19 @@ export default function GerenciarDoacao() {
     }
   }
 
-  function aoSelecionarImagem(arquivo: File) {
-    setImagem(arquivo);
-    setImagemPreview(URL.createObjectURL(arquivo));
+  function aoAdicionarImagens(arquivos: File[]) {
+    setImagensNovas((atual) => [
+      ...atual,
+      ...arquivos.map((arquivo) => ({ arquivo, preview: URL.createObjectURL(arquivo) })),
+    ]);
+  }
+
+  function aoRemoverImagemExistente(url: string) {
+    setImagensExistentes((atual) => atual.filter((u) => u !== url));
+  }
+
+  function aoRemoverImagemNova(preview: string) {
+    setImagensNovas((atual) => atual.filter((img) => img.preview !== preview));
   }
 
   async function salvar() {
@@ -75,15 +85,17 @@ export default function GerenciarDoacao() {
     setMensagem(null);
     setSalvando(true);
     try {
+      const removerImagens = doacao.imagens_urls.filter((u) => !imagensExistentes.includes(u));
       const atualizada = await editarDoacao(doacao.id, codigo, {
         titulo,
         descricao,
         status,
-        imagem,
+        imagensNovas: imagensNovas.map((img) => img.arquivo),
+        removerImagens,
       });
       setDoacao(atualizada);
-      setImagem(null);
-      setImagemPreview(atualizada.imagem_url);
+      setImagensExistentes(atualizada.imagens_urls);
+      setImagensNovas([]);
       setMensagem("Alterações salvas.");
     } catch (e: any) {
       setErro(e.message);
@@ -150,7 +162,13 @@ export default function GerenciarDoacao() {
       {doacao && (
         <Paper variant="outlined" sx={{ p: 3 }}>
           <Stack spacing={2.5}>
-            <SeletorImagem preview={imagemPreview} onSelecionar={aoSelecionarImagem} />
+            <SeletorImagens
+              imagensExistentes={imagensExistentes}
+              imagensNovas={imagensNovas}
+              onAdicionar={aoAdicionarImagens}
+              onRemoverExistente={aoRemoverImagemExistente}
+              onRemoverNova={aoRemoverImagemNova}
+            />
 
             <TextField
               label="Título"

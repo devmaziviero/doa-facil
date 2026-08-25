@@ -8,7 +8,7 @@ create table if not exists doacoes (
   estado text not null,
   cidade text not null,
   contato text not null,
-  imagem_url text,
+  imagens_urls text[] not null default '{}',
   status text not null default 'disponivel' check (status in ('disponivel', 'reservada', 'retirada')),
   codigo_gerenciamento text not null,
   criado_em timestamptz not null default now()

@@ -8,7 +8,7 @@ export interface Doacao {
   estado: string;
   cidade: string;
   contato: string;
-  imagem_url: string | null;
+  imagens_urls: string[];
   status: StatusDoacao;
   criado_em: string;
 }

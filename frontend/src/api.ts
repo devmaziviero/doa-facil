@@ -45,7 +45,7 @@ export interface DadosNovaDoacao {
   estado: string;
   cidade: string;
   contato: string;
-  imagem?: File | null;
+  imagens?: File[];
 }
 
 export function criarDoacao(dados: DadosNovaDoacao): Promise<NovaDoacaoResposta> {
@@ -56,7 +56,7 @@ export function criarDoacao(dados: DadosNovaDoacao): Promise<NovaDoacaoResposta>
   form.append("estado", dados.estado);
   form.append("cidade", dados.cidade);
   form.append("contato", dados.contato);
-  if (dados.imagem) form.append("imagem", dados.imagem);
+  dados.imagens?.forEach((arquivo) => form.append("imagens", arquivo));
 
   return fetch(`${BASE_URL}/doacoes`, { method: "POST", body: form }).then((r) =>
     tratarResposta<NovaDoacaoResposta>(r)
@@ -67,7 +67,8 @@ export interface DadosEdicaoDoacao {
   titulo?: string;
   descricao?: string;
   status?: string;
-  imagem?: File | null;
+  imagensNovas?: File[];
+  removerImagens?: string[];
 }
 
 export function editarDoacao(
@@ -80,7 +81,10 @@ export function editarDoacao(
   if (dados.titulo !== undefined) form.append("titulo", dados.titulo);
   if (dados.descricao !== undefined) form.append("descricao", dados.descricao);
   if (dados.status !== undefined) form.append("status", dados.status);
-  if (dados.imagem) form.append("imagem", dados.imagem);
+  if (dados.removerImagens?.length) {
+    form.append("remover_imagens", JSON.stringify(dados.removerImagens));
+  }
+  dados.imagensNovas?.forEach((arquivo) => form.append("imagens", arquivo));
 
   return fetch(`${BASE_URL}/doacoes/${id}`, { method: "PATCH", body: form }).then((r) =>
     tratarResposta<Doacao>(r)

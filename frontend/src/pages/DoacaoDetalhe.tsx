@@ -22,10 +22,16 @@ export default function DoacaoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const [doacao, setDoacao] = useState<Doacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [imagemSelecionada, setImagemSelecionada] = useState(0);
 
   useEffect(() => {
     if (!id) return;
-    obterDoacao(id).then(setDoacao).catch((e) => setErro(e.message));
+    obterDoacao(id)
+      .then((encontrada) => {
+        setDoacao(encontrada);
+        setImagemSelecionada(0);
+      })
+      .catch((e) => setErro(e.message));
   }, [id]);
 
   if (erro) return <Alert severity="error">{erro}</Alert>;
@@ -47,18 +53,42 @@ export default function DoacaoDetalhe() {
       </Button>
 
       <Paper variant="outlined" sx={{ overflow: "hidden" }}>
-        {doacao.imagem_url && (
-          <Box
-            component="img"
-            src={doacao.imagem_url}
-            alt={doacao.titulo}
-            sx={{ width: "100%", height: 260, objectFit: "cover", display: "block" }}
-          />
+        {doacao.imagens_urls.length > 0 && (
+          <>
+            <Box
+              component="img"
+              src={doacao.imagens_urls[imagemSelecionada]}
+              alt={doacao.titulo}
+              sx={{ width: "100%", height: 260, objectFit: "cover", display: "block" }}
+            />
+            {doacao.imagens_urls.length > 1 && (
+              <Stack direction="row" spacing={1} sx={{ p: 1.5, bgcolor: "action.hover" }}>
+                {doacao.imagens_urls.map((url, indice) => (
+                  <Box
+                    key={url}
+                    component="img"
+                    src={url}
+                    onClick={() => setImagemSelecionada(indice)}
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      objectFit: "cover",
+                      borderRadius: 1.5,
+                      cursor: "pointer",
+                      outline: indice === imagemSelecionada ? "2px solid" : "none",
+                      outlineColor: "primary.main",
+                      opacity: indice === imagemSelecionada ? 1 : 0.7,
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
+          </>
         )}
 
         <Box sx={{ p: 3 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 2 }}>
-          {!doacao.imagem_url && (
+          {doacao.imagens_urls.length === 0 && (
             <Avatar sx={{ bgcolor: "primary.light", width: 56, height: 56 }}>
               <Icone />
             </Avatar>

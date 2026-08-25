@@ -13,16 +13,15 @@ import { COR_STATUS, ROTULO_STATUS, iconePorCategoria, rotuloPorCategoria } from
 
 export default function DoacaoCard({ doacao }: { doacao: Doacao }) {
   const Icone = iconePorCategoria(doacao.categoria);
+  const capa = doacao.imagens_urls[0];
 
   return (
     <Card variant="outlined">
       <CardActionArea component={Link} to={`/doacao/${doacao.id}`}>
-        {doacao.imagem_url && (
-          <CardMedia component="img" height="140" image={doacao.imagem_url} alt={doacao.titulo} />
-        )}
+        {capa && <CardMedia component="img" height="140" image={capa} alt={doacao.titulo} />}
         <CardContent>
           <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
-            {!doacao.imagem_url && (
+            {!capa && (
               <Avatar sx={{ bgcolor: "primary.light" }}>
                 <Icone fontSize="small" />
               </Avatar>

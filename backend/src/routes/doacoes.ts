@@ -8,6 +8,8 @@ import { enviarImagem } from "../storage";
 
 export const doacoesRouter = Router();
 
+const MAX_IMAGENS = 5;
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -20,7 +22,7 @@ const upload = multer({
 });
 
 const COLUNAS_PUBLICAS = `
-  id, titulo, descricao, categoria, estado, cidade, contato, imagem_url, status, criado_em
+  id, titulo, descricao, categoria, estado, cidade, contato, imagens_urls, status, criado_em
 `;
 
 function gerarCodigoGerenciamento() {
@@ -95,8 +97,8 @@ doacoesRouter.get("/:id", asyncHandler(async (req, res) => {
   res.json(resultado.rows[0]);
 }));
 
-// POST /api/doacoes (multipart/form-data, campo "imagem" opcional)
-doacoesRouter.post("/", upload.single("imagem"), asyncHandler(async (req, res) => {
+// POST /api/doacoes (multipart/form-data, campo "imagens" opcional, até 5 arquivos)
+doacoesRouter.post("/", upload.array("imagens", MAX_IMAGENS), asyncHandler(async (req, res) => {
   const { titulo, descricao, categoria, estado, cidade, contato } = req.body;
 
   if (!titulo || !categoria || !estado || !cidade || !contato) {
@@ -105,14 +107,15 @@ doacoesRouter.post("/", upload.single("imagem"), asyncHandler(async (req, res) =
     });
   }
 
-  const imagemUrl = req.file ? await enviarImagem(req.file) : null;
+  const arquivos = (req.files as Express.Multer.File[] | undefined) ?? [];
+  const imagensUrls = await Promise.all(arquivos.map(enviarImagem));
   const codigoGerenciamento = gerarCodigoGerenciamento();
 
   const resultado = await pool.query(
-    `insert into doacoes (titulo, descricao, categoria, estado, cidade, contato, imagem_url, codigo_gerenciamento)
+    `insert into doacoes (titulo, descricao, categoria, estado, cidade, contato, imagens_urls, codigo_gerenciamento)
      values ($1, $2, $3, $4, $5, $6, $7, $8)
      returning ${COLUNAS_PUBLICAS}`,
-    [titulo, descricao || null, categoria, estado, cidade, contato, imagemUrl, codigoGerenciamento]
+    [titulo, descricao || null, categoria, estado, cidade, contato, imagensUrls, codigoGerenciamento]
   );
 
   // o código só é devolvido aqui, na criação — depois disso o servidor
@@ -124,9 +127,10 @@ doacoesRouter.post("/", upload.single("imagem"), asyncHandler(async (req, res) =
 }));
 
 // PATCH /api/doacoes/:id (multipart/form-data)
-// campos opcionais: titulo, descricao, status, imagem — só atualiza o que vier preenchido
-doacoesRouter.patch("/:id", upload.single("imagem"), asyncHandler(async (req, res) => {
-  const { titulo, descricao, status, codigo_gerenciamento } = req.body;
+// campos opcionais: titulo, descricao, status, imagens (novas, até 5 no total),
+// remover_imagens (JSON com URLs a remover da galeria) — só atualiza o que vier preenchido
+doacoesRouter.patch("/:id", upload.array("imagens", MAX_IMAGENS), asyncHandler(async (req, res) => {
+  const { titulo, descricao, status, remover_imagens, codigo_gerenciamento } = req.body;
 
   if (!codigo_gerenciamento) {
     return res.status(400).json({ erro: "codigo_gerenciamento é obrigatório." });
@@ -135,6 +139,8 @@ doacoesRouter.patch("/:id", upload.single("imagem"), asyncHandler(async (req, re
   if (status !== undefined && !STATUS_VALIDOS.includes(status)) {
     return res.status(400).json({ erro: "status inválido." });
   }
+
+  const arquivos = (req.files as Express.Multer.File[] | undefined) ?? [];
 
   const campos: string[] = [];
   const valores: unknown[] = [];
@@ -151,10 +157,30 @@ doacoesRouter.patch("/:id", upload.single("imagem"), asyncHandler(async (req, re
     valores.push(status);
     campos.push(`status = $${valores.length}`);
   }
-  if (req.file) {
-    const imagemUrl = await enviarImagem(req.file);
-    valores.push(imagemUrl);
-    campos.push(`imagem_url = $${valores.length}`);
+
+  if (arquivos.length > 0 || remover_imagens) {
+    const atual = await pool.query("select imagens_urls from doacoes where id = $1", [
+      req.params.id,
+    ]);
+
+    if (atual.rowCount === 0) {
+      return res.status(404).json({ erro: "Doação não encontrada." });
+    }
+
+    let urls: string[] = atual.rows[0].imagens_urls;
+
+    if (remover_imagens) {
+      const urlsRemover: string[] = JSON.parse(remover_imagens);
+      urls = urls.filter((u) => !urlsRemover.includes(u));
+    }
+
+    if (arquivos.length > 0) {
+      const novasUrls = await Promise.all(arquivos.map(enviarImagem));
+      urls = [...urls, ...novasUrls].slice(0, MAX_IMAGENS);
+    }
+
+    valores.push(urls);
+    campos.push(`imagens_urls = $${valores.length}`);
   }
 
   if (campos.length === 0) {

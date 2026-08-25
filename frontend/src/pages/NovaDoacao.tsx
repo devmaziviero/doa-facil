@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { criarDoacao } from "../api";
 import type { NovaDoacaoResposta } from "../types";
 import SeletorEstadoCidade from "../components/SeletorEstadoCidade";
-import SeletorImagem from "../components/SeletorImagem";
+import SeletorImagens, { ImagemNova } from "../components/SeletorImagens";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -26,16 +26,21 @@ export default function NovaDoacao() {
   const [estado, setEstado] = useState("");
   const [cidade, setCidade] = useState("");
   const [contato, setContato] = useState("");
-  const [imagem, setImagem] = useState<File | null>(null);
-  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+  const [imagensNovas, setImagensNovas] = useState<ImagemNova[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<NovaDoacaoResposta | null>(null);
   const [copiado, setCopiado] = useState(false);
 
-  function aoSelecionarImagem(arquivo: File) {
-    setImagem(arquivo);
-    setImagemPreview(URL.createObjectURL(arquivo));
+  function aoAdicionarImagens(arquivos: File[]) {
+    setImagensNovas((atual) => [
+      ...atual,
+      ...arquivos.map((arquivo) => ({ arquivo, preview: URL.createObjectURL(arquivo) })),
+    ]);
+  }
+
+  function aoRemoverImagem(preview: string) {
+    setImagensNovas((atual) => atual.filter((img) => img.preview !== preview));
   }
 
   async function aoEnviar(e: FormEvent) {
@@ -50,7 +55,7 @@ export default function NovaDoacao() {
         estado,
         cidade,
         contato,
-        imagem,
+        imagens: imagensNovas.map((img) => img.arquivo),
       });
       setResultado(doacao);
     } catch (e: any) {
@@ -116,7 +121,13 @@ export default function NovaDoacao() {
 
       <Paper variant="outlined" sx={{ p: 3, mt: 2 }}>
         <Stack component="form" spacing={2.5} onSubmit={aoEnviar}>
-          <SeletorImagem preview={imagemPreview} onSelecionar={aoSelecionarImagem} />
+          <SeletorImagens
+            imagensExistentes={[]}
+            imagensNovas={imagensNovas}
+            onAdicionar={aoAdicionarImagens}
+            onRemoverExistente={() => {}}
+            onRemoverNova={aoRemoverImagem}
+          />
 
           <TextField
             label="Título"

@@ -1,13 +1,26 @@
 import { Router } from "express";
 import { randomBytes } from "node:crypto";
+import multer from "multer";
 import { pool } from "../db";
 import { STATUS_VALIDOS } from "../types";
 import { asyncHandler } from "../asyncHandler";
+import { enviarImagem } from "../storage";
 
 export const doacoesRouter = Router();
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("O arquivo enviado precisa ser uma imagem."));
+    }
+    cb(null, true);
+  },
+});
+
 const COLUNAS_PUBLICAS = `
-  id, titulo, descricao, categoria, estado, cidade, contato, status, criado_em
+  id, titulo, descricao, categoria, estado, cidade, contato, imagem_url, status, criado_em
 `;
 
 function gerarCodigoGerenciamento() {
@@ -82,8 +95,8 @@ doacoesRouter.get("/:id", asyncHandler(async (req, res) => {
   res.json(resultado.rows[0]);
 }));
 
-// POST /api/doacoes
-doacoesRouter.post("/", asyncHandler(async (req, res) => {
+// POST /api/doacoes (multipart/form-data, campo "imagem" opcional)
+doacoesRouter.post("/", upload.single("imagem"), asyncHandler(async (req, res) => {
   const { titulo, descricao, categoria, estado, cidade, contato } = req.body;
 
   if (!titulo || !categoria || !estado || !cidade || !contato) {
@@ -92,13 +105,14 @@ doacoesRouter.post("/", asyncHandler(async (req, res) => {
     });
   }
 
+  const imagemUrl = req.file ? await enviarImagem(req.file) : null;
   const codigoGerenciamento = gerarCodigoGerenciamento();
 
   const resultado = await pool.query(
-    `insert into doacoes (titulo, descricao, categoria, estado, cidade, contato, codigo_gerenciamento)
-     values ($1, $2, $3, $4, $5, $6, $7)
+    `insert into doacoes (titulo, descricao, categoria, estado, cidade, contato, imagem_url, codigo_gerenciamento)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
      returning ${COLUNAS_PUBLICAS}`,
-    [titulo, descricao ?? null, categoria, estado, cidade, contato, codigoGerenciamento]
+    [titulo, descricao || null, categoria, estado, cidade, contato, imagemUrl, codigoGerenciamento]
   );
 
   // o código só é devolvido aqui, na criação — depois disso o servidor
@@ -109,23 +123,54 @@ doacoesRouter.post("/", asyncHandler(async (req, res) => {
   });
 }));
 
-// PATCH /api/doacoes/:id  { status, codigo_gerenciamento }
-doacoesRouter.patch("/:id", asyncHandler(async (req, res) => {
-  const { status, codigo_gerenciamento } = req.body;
+// PATCH /api/doacoes/:id (multipart/form-data)
+// campos opcionais: titulo, descricao, status, imagem — só atualiza o que vier preenchido
+doacoesRouter.patch("/:id", upload.single("imagem"), asyncHandler(async (req, res) => {
+  const { titulo, descricao, status, codigo_gerenciamento } = req.body;
 
   if (!codigo_gerenciamento) {
     return res.status(400).json({ erro: "codigo_gerenciamento é obrigatório." });
   }
 
-  if (!STATUS_VALIDOS.includes(status)) {
+  if (status !== undefined && !STATUS_VALIDOS.includes(status)) {
     return res.status(400).json({ erro: "status inválido." });
   }
 
+  const campos: string[] = [];
+  const valores: unknown[] = [];
+
+  if (titulo !== undefined) {
+    valores.push(titulo);
+    campos.push(`titulo = $${valores.length}`);
+  }
+  if (descricao !== undefined) {
+    valores.push(descricao || null);
+    campos.push(`descricao = $${valores.length}`);
+  }
+  if (status !== undefined) {
+    valores.push(status);
+    campos.push(`status = $${valores.length}`);
+  }
+  if (req.file) {
+    const imagemUrl = await enviarImagem(req.file);
+    valores.push(imagemUrl);
+    campos.push(`imagem_url = $${valores.length}`);
+  }
+
+  if (campos.length === 0) {
+    return res.status(400).json({ erro: "Nada para atualizar." });
+  }
+
+  valores.push(req.params.id);
+  const posicaoId = valores.length;
+  valores.push(codigo_gerenciamento);
+  const posicaoCodigo = valores.length;
+
   const resultado = await pool.query(
-    `update doacoes set status = $1
-     where id = $2 and codigo_gerenciamento = $3
+    `update doacoes set ${campos.join(", ")}
+     where id = $${posicaoId} and codigo_gerenciamento = $${posicaoCodigo}
      returning ${COLUNAS_PUBLICAS}`,
-    [status, req.params.id, codigo_gerenciamento]
+    valores
   );
 
   if (resultado.rowCount === 0) {

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
+import CardMedia from "@mui/material/CardMedia";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
@@ -16,11 +17,16 @@ export default function DoacaoCard({ doacao }: { doacao: Doacao }) {
   return (
     <Card variant="outlined">
       <CardActionArea component={Link} to={`/doacao/${doacao.id}`}>
+        {doacao.imagem_url && (
+          <CardMedia component="img" height="140" image={doacao.imagem_url} alt={doacao.titulo} />
+        )}
         <CardContent>
           <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
-            <Avatar sx={{ bgcolor: "primary.light" }}>
-              <Icone fontSize="small" />
-            </Avatar>
+            {!doacao.imagem_url && (
+              <Avatar sx={{ bgcolor: "primary.light" }}>
+                <Icone fontSize="small" />
+              </Avatar>
+            )}
 
             <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
               <Stack

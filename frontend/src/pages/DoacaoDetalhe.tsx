@@ -46,11 +46,23 @@ export default function DoacaoDetalhe() {
         Voltar
       </Button>
 
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+        {doacao.imagem_url && (
+          <Box
+            component="img"
+            src={doacao.imagem_url}
+            alt={doacao.titulo}
+            sx={{ width: "100%", height: 260, objectFit: "cover", display: "block" }}
+          />
+        )}
+
+        <Box sx={{ p: 3 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 2 }}>
-          <Avatar sx={{ bgcolor: "primary.light", width: 56, height: 56 }}>
-            <Icone />
-          </Avatar>
+          {!doacao.imagem_url && (
+            <Avatar sx={{ bgcolor: "primary.light", width: 56, height: 56 }}>
+              <Icone />
+            </Avatar>
+          )}
           <Box>
             <Typography variant="h5">{doacao.titulo}</Typography>
             <Chip
@@ -104,6 +116,7 @@ export default function DoacaoDetalhe() {
         ) : (
           <Alert severity="info">Esta doação não está mais disponível.</Alert>
         )}
+        </Box>
       </Paper>
     </Box>
   );

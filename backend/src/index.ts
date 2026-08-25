@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import multer from "multer";
 import { doacoesRouter } from "./routes/doacoes";
 
 dotenv.config();
@@ -19,6 +20,11 @@ app.use("/api/doacoes", doacoesRouter);
 // responde com 500 em vez de derrubar o processo do servidor
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
+
+  if (err instanceof multer.MulterError || (err as Error)?.message?.includes("imagem")) {
+    return res.status(400).json({ erro: (err as Error).message });
+  }
+
   res.status(500).json({ erro: "Erro interno no servidor." });
 });
 

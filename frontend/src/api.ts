@@ -45,26 +45,46 @@ export interface DadosNovaDoacao {
   estado: string;
   cidade: string;
   contato: string;
+  imagem?: File | null;
 }
 
 export function criarDoacao(dados: DadosNovaDoacao): Promise<NovaDoacaoResposta> {
-  return fetch(`${BASE_URL}/doacoes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(dados),
-  }).then((r) => tratarResposta<NovaDoacaoResposta>(r));
+  const form = new FormData();
+  form.append("titulo", dados.titulo);
+  if (dados.descricao) form.append("descricao", dados.descricao);
+  form.append("categoria", dados.categoria);
+  form.append("estado", dados.estado);
+  form.append("cidade", dados.cidade);
+  form.append("contato", dados.contato);
+  if (dados.imagem) form.append("imagem", dados.imagem);
+
+  return fetch(`${BASE_URL}/doacoes`, { method: "POST", body: form }).then((r) =>
+    tratarResposta<NovaDoacaoResposta>(r)
+  );
 }
 
-export function atualizarStatusDoacao(
+export interface DadosEdicaoDoacao {
+  titulo?: string;
+  descricao?: string;
+  status?: string;
+  imagem?: File | null;
+}
+
+export function editarDoacao(
   id: string,
-  status: string,
-  codigoGerenciamento: string
+  codigoGerenciamento: string,
+  dados: DadosEdicaoDoacao
 ): Promise<Doacao> {
-  return fetch(`${BASE_URL}/doacoes/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, codigo_gerenciamento: codigoGerenciamento }),
-  }).then((r) => tratarResposta<Doacao>(r));
+  const form = new FormData();
+  form.append("codigo_gerenciamento", codigoGerenciamento);
+  if (dados.titulo !== undefined) form.append("titulo", dados.titulo);
+  if (dados.descricao !== undefined) form.append("descricao", dados.descricao);
+  if (dados.status !== undefined) form.append("status", dados.status);
+  if (dados.imagem) form.append("imagem", dados.imagem);
+
+  return fetch(`${BASE_URL}/doacoes/${id}`, { method: "PATCH", body: form }).then((r) =>
+    tratarResposta<Doacao>(r)
+  );
 }
 
 export function excluirDoacao(id: string, codigoGerenciamento: string): Promise<void> {

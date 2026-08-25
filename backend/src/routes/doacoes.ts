@@ -53,6 +53,21 @@ doacoesRouter.get("/", asyncHandler(async (req, res) => {
   res.json(resultado.rows);
 }));
 
+// GET /api/doacoes/codigo/:codigo — usado na página "gerenciar", já que o
+// usuário só recebe o código na hora da publicação, nunca o id.
+doacoesRouter.get("/codigo/:codigo", asyncHandler(async (req, res) => {
+  const resultado = await pool.query(
+    `select ${COLUNAS_PUBLICAS} from doacoes where codigo_gerenciamento = $1`,
+    [req.params.codigo]
+  );
+
+  if (resultado.rowCount === 0) {
+    return res.status(404).json({ erro: "Nenhuma doação encontrada com esse código." });
+  }
+
+  res.json(resultado.rows[0]);
+}));
+
 // GET /api/doacoes/:id
 doacoesRouter.get("/:id", asyncHandler(async (req, res) => {
   const resultado = await pool.query(

@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { atualizarStatusDoacao, excluirDoacao, obterDoacao } from "../api";
+import { atualizarStatusDoacao, buscarDoacaoPorCodigo, excluirDoacao } from "../api";
 import type { Doacao } from "../types";
 import { COR_STATUS, ROTULO_STATUS } from "../constants";
 import Paper from "@mui/material/Paper";
@@ -19,7 +19,6 @@ import DialogActions from "@mui/material/DialogActions";
 import DeleteOutlineIcon from "@mui/icons-material/Delete";
 
 export default function GerenciarDoacao() {
-  const [idDoacao, setIdDoacao] = useState("");
   const [codigo, setCodigo] = useState("");
   const [doacao, setDoacao] = useState<Doacao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -31,7 +30,7 @@ export default function GerenciarDoacao() {
     setErro(null);
     setMensagem(null);
     try {
-      const encontrada = await obterDoacao(idDoacao.trim());
+      const encontrada = await buscarDoacaoPorCodigo(codigo.trim());
       setDoacao(encontrada);
     } catch (e: any) {
       setDoacao(null);
@@ -72,19 +71,11 @@ export default function GerenciarDoacao() {
         Gerenciar meu anúncio
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Cole o ID da doação (está no link da página dela) e o código de gerenciamento recebido na
-        hora da publicação.
+        Cole o código de gerenciamento que você recebeu na hora da publicação.
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 3 }}>
         <Stack component="form" spacing={2} onSubmit={buscar}>
-          <TextField
-            label="ID da doação"
-            value={idDoacao}
-            onChange={(e) => setIdDoacao(e.target.value)}
-            required
-            fullWidth
-          />
           <TextField
             label="Código de gerenciamento"
             value={codigo}

@@ -32,6 +32,12 @@ export function obterDoacao(id: string): Promise<Doacao> {
   return fetch(`${BASE_URL}/doacoes/${id}`).then((r) => tratarResposta<Doacao>(r));
 }
 
+export function buscarDoacaoPorCodigo(codigo: string): Promise<Doacao> {
+  return fetch(`${BASE_URL}/doacoes/codigo/${encodeURIComponent(codigo)}`).then((r) =>
+    tratarResposta<Doacao>(r)
+  );
+}
+
 export interface DadosNovaDoacao {
   titulo: string;
   descricao?: string;

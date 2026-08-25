@@ -17,14 +17,18 @@ export default function DoacaoCard({ doacao }: { doacao: Doacao }) {
     <Card variant="outlined">
       <CardActionArea component={Link} to={`/doacao/${doacao.id}`}>
         <CardContent>
-          <Stack direction="row" spacing={2} alignItems="flex-start">
+          <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start" }}>
             <Avatar sx={{ bgcolor: "primary.light" }}>
               <Icone fontSize="small" />
             </Avatar>
 
             <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                <Typography variant="subtitle1" fontWeight={700} noWrap>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ justifyContent: "space-between", alignItems: "center" }}
+              >
+                <Typography variant="subtitle1" noWrap sx={{ fontWeight: 700 }}>
                   {doacao.titulo}
                 </Typography>
               </Stack>
@@ -40,7 +44,11 @@ export default function DoacaoCard({ doacao }: { doacao: Doacao }) {
                 {rotuloPorCategoria(doacao.categoria)}
               </Typography>
 
-              <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{ alignItems: "center", color: "text.secondary" }}
+              >
                 <LocationOnIcon fontSize="inherit" />
                 <Typography variant="body2">
                   {doacao.cidade} - {doacao.estado}

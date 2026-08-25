@@ -67,7 +67,7 @@ export default function GerenciarDoacao() {
   }
 
   return (
-    <Box maxWidth={480} mx="auto">
+    <Box sx={{ maxWidth: 480, mx: "auto" }}>
       <Typography variant="h4" gutterBottom>
         Gerenciar meu anúncio
       </Typography>
@@ -121,7 +121,7 @@ export default function GerenciarDoacao() {
               />
             </Stack>
 
-            <Stack direction="row" flexWrap="wrap" gap={1}>
+            <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
               <Button
                 variant="outlined"
                 color="warning"

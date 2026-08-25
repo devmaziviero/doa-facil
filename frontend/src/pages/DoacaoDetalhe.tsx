@@ -31,7 +31,7 @@ export default function DoacaoDetalhe() {
   if (erro) return <Alert severity="error">{erro}</Alert>;
   if (!doacao) {
     return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
+      <Stack sx={{ alignItems: "center", py: 4 }}>
         <CircularProgress />
       </Stack>
     );
@@ -41,13 +41,13 @@ export default function DoacaoDetalhe() {
   const whatsapp = doacao.status === "disponivel" ? linkWhatsApp(doacao.contato) : null;
 
   return (
-    <Box maxWidth={560} mx="auto">
+    <Box sx={{ maxWidth: 560, mx: "auto" }}>
       <Button component={Link} to="/" startIcon={<ArrowBackIcon />} sx={{ mb: 2 }}>
         Voltar
       </Button>
 
       <Paper variant="outlined" sx={{ p: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 2 }}>
           <Avatar sx={{ bgcolor: "primary.light", width: 56, height: 56 }}>
             <Icone />
           </Avatar>
@@ -66,7 +66,11 @@ export default function DoacaoDetalhe() {
           {rotuloPorCategoria(doacao.categoria)}
         </Typography>
 
-        <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary" sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{ alignItems: "center", color: "text.secondary", mb: 2 }}
+        >
           <LocationOnIcon fontSize="small" />
           <Typography variant="body2">
             {doacao.cidade} - {doacao.estado}
@@ -79,7 +83,7 @@ export default function DoacaoDetalhe() {
 
         {doacao.status === "disponivel" ? (
           <Paper variant="outlined" sx={{ p: 2, bgcolor: "success.light" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
               <ContactPhoneIcon fontSize="small" />
               <Typography variant="subtitle2">Contato para combinar a retirada</Typography>
             </Stack>

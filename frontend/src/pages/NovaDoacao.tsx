@@ -71,10 +71,10 @@ export default function NovaDoacao() {
 
         <Stack
           direction="row"
-          alignItems="center"
-          justifyContent="center"
           spacing={1}
           sx={{
+            alignItems: "center",
+            justifyContent: "center",
             bgcolor: "warning.light",
             borderRadius: 2,
             py: 1.5,
@@ -82,7 +82,7 @@ export default function NovaDoacao() {
             mb: 1,
           }}
         >
-          <Typography variant="h5" fontWeight={700} letterSpacing={2}>
+          <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 2 }}>
             {resultado.codigo_gerenciamento}
           </Typography>
           <Tooltip title={copiado ? "Copiado!" : "Copiar código"}>
@@ -100,7 +100,7 @@ export default function NovaDoacao() {
   }
 
   return (
-    <Box maxWidth={560} mx="auto">
+    <Box sx={{ maxWidth: 560, mx: "auto" }}>
       <Typography variant="h4" gutterBottom>
         Anunciar uma doação
       </Typography>

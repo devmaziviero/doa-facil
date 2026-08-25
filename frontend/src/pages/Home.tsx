@@ -72,7 +72,7 @@ export default function Home() {
       </Paper>
 
       {carregando && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
+        <Stack sx={{ alignItems: "center", py: 4 }}>
           <CircularProgress />
         </Stack>
       )}

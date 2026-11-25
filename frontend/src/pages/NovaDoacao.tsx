@@ -16,6 +16,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import Box from "@mui/material/Box";
 import { CATEGORIAS } from "../constants";
 
@@ -72,14 +73,19 @@ export default function NovaDoacao() {
   }
 
   if (resultado) {
+    const linkGerenciar = `${window.location.origin}/gerenciar?codigo=${resultado.codigo_gerenciamento}`;
+    const textoWhats = encodeURIComponent(
+      `Meu link para gerenciar minha doação no Doa Fácil: ${linkGerenciar}`
+    );
+
     return (
-      <Paper variant="outlined" sx={{ p: 4, maxWidth: 480, mx: "auto", textAlign: "center" }}>
-        <CheckCircleIcon color="success" sx={{ fontSize: 48, mb: 1 }} />
-        <Typography variant="h5" gutterBottom>
+      <Paper variant="outlined" sx={{ p: 4, maxWidth: 520, mx: "auto", textAlign: "center" }}>
+        <CheckCircleIcon color="success" sx={{ fontSize: 56, mb: 1 }} />
+        <Typography variant="h4" gutterBottom>
           Doação publicada!
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Guarde este código — é ele que permite marcar a doação como reservada, retirada ou
+          Guarde este código: é ele que permite marcar a doação como reservada, retirada ou
           excluir o anúncio depois. Ele não aparece em nenhum outro lugar.
         </Typography>
 
@@ -89,7 +95,7 @@ export default function NovaDoacao() {
           sx={{
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "warning.light",
+            bgcolor: "#FEF3C7",
             borderRadius: 2,
             py: 1.5,
             px: 2,
@@ -106,20 +112,37 @@ export default function NovaDoacao() {
           </Tooltip>
         </Stack>
 
-        <Button component={Link} to="/" variant="contained" sx={{ mt: 2 }}>
-          Voltar para as doações
-        </Button>
+        <Stack spacing={1.5} sx={{ mt: 2 }}>
+          <Button
+            href={`https://wa.me/?text=${textoWhats}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outlined"
+            startIcon={<WhatsAppIcon />}
+          >
+            Enviar meu link para o WhatsApp
+          </Button>
+          <Button component={Link} to={`/gerenciar?codigo=${resultado.codigo_gerenciamento}`} variant="outlined">
+            Gerenciar agora
+          </Button>
+          <Button component={Link} to="/" variant="contained">
+            Voltar para as doações
+          </Button>
+        </Stack>
       </Paper>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 560, mx: "auto" }}>
+    <Box sx={{ maxWidth: 640, mx: "auto" }}>
       <Typography variant="h4" gutterBottom>
         Anunciar uma doação
       </Typography>
+      <Typography color="text.secondary">
+        Leva menos de um minuto. Sem cadastro: você recebe um código para gerenciar o anúncio.
+      </Typography>
 
-      <Paper variant="outlined" sx={{ p: 3, mt: 2 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 4 }, mt: 3 }}>
         <Stack component="form" spacing={2.5} onSubmit={aoEnviar}>
           <SeletorImagens
             imagensExistentes={[]}

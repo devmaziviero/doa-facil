@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { buscarDoacaoPorCodigo, editarDoacao, excluirDoacao } from "../api";
 import type { Doacao, StatusDoacao } from "../types";
 import SeletorImagens, { ImagemNova } from "../components/SeletorImagens";
@@ -30,6 +31,7 @@ const OPCOES_STATUS: { valor: StatusDoacao; rotulo: string; Icone: typeof CheckC
 ];
 
 export default function GerenciarDoacao() {
+  const [searchParams] = useSearchParams();
   const [codigoBusca, setCodigoBusca] = useState("");
   const [codigo, setCodigo] = useState<string | null>(null);
   const [doacao, setDoacao] = useState<Doacao | null>(null);
@@ -45,13 +47,28 @@ export default function GerenciarDoacao() {
   const [imagensExistentes, setImagensExistentes] = useState<string[]>([]);
   const [imagensNovas, setImagensNovas] = useState<ImagemNova[]>([]);
 
-  async function buscar(e: FormEvent) {
+  // abre direto quando chega pelo link /gerenciar?codigo=XXXX
+  useEffect(() => {
+    const codigoUrl = searchParams.get("codigo");
+    if (codigoUrl) {
+      setCodigoBusca(codigoUrl);
+      void buscarPorCodigo(codigoUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function buscar(e: FormEvent) {
     e.preventDefault();
+    void buscarPorCodigo(codigoBusca);
+  }
+
+  async function buscarPorCodigo(valor: string) {
+    const limpo = valor.trim();
     setErroBusca(null);
     try {
-      const encontrada = await buscarDoacaoPorCodigo(codigoBusca.trim());
+      const encontrada = await buscarDoacaoPorCodigo(limpo);
       setDoacao(encontrada);
-      setCodigo(codigoBusca.trim());
+      setCodigo(limpo);
       setTitulo(encontrada.titulo);
       setDescricao(encontrada.descricao ?? "");
       setStatus(encontrada.status);
@@ -120,10 +137,20 @@ export default function GerenciarDoacao() {
   }
 
   return (
-    <Box sx={{ maxWidth: 520, mx: "auto" }}>
+    <Box sx={{ maxWidth: 640, mx: "auto" }}>
       <Typography variant="h4" gutterBottom>
         Gerenciar meu anúncio
       </Typography>
+      {doacao && (
+        <Button
+          component={Link}
+          to={`/doacao/${doacao.id}`}
+          size="small"
+          sx={{ mb: 2 }}
+        >
+          Ver como os outros veem
+        </Button>
+      )}
 
       {!doacao && (
         <>
@@ -160,7 +187,7 @@ export default function GerenciarDoacao() {
       )}
 
       {doacao && (
-        <Paper variant="outlined" sx={{ p: 3 }}>
+        <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 4 } }}>
           <Stack spacing={2.5}>
             <SeletorImagens
               imagensExistentes={imagensExistentes}
